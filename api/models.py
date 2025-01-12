@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.timezone import now  # Import for dynamic default values
 # # Feedback Model
 # class Feedback(models.Model):
 #     first_name_feed_supp = models.CharField(max_length=100)
