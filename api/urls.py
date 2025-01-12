@@ -29,39 +29,45 @@
 # ]
 
 from django.urls import path
-from . import views
+from .views import *
 
 urlpatterns = [
     # Authentication
-    path('login/', views.login_user, name='login'),
-    path('register/', views.register_user, name='register_user'),
-    path('change-password/', views.change_password, name='change_password'),
-    path('add-person/', views.add_person, name='add_person'),
+    path('login/', login_user, name='login'),
+    path('register/', register_user, name='register_user'),
+    path('change-password/', change_password, name='change_password'),
+    path('add-person/', add_person, name='add_person'),
     # Person Management
-    path('add-person/', views.add_person, name='add_person'),
-    path('get-person/', views.get_person, name='get_person'),
- path('logout/', views.logout_user, name='logout'),
+    path('add-person/', add_person, name='add_person'),
+    path('get-person/', get_person, name='get_person'),
+ path('logout/', logout_user, name='logout'),
     # Feedback
-    path('submit-feedback/', views.submit_feedback, name='submit_feedback'),
+    path('submit-feedback/', submit_feedback, name='submit_feedback'),
 
     # Email Support
-    path('email-support/', views.email_support, name='email_support'),
+    path('email-support/', email_support, name='email_support'),
 
     # Contact VRM
-    path('contact-vrm/', views.contact_vrm, name='contact_vrm'),
+    path('contact-vrm/', contact_vrm, name='contact_vrm'),
 
     # Ask the Expert
-    path('ask-the-expert/', views.ask_the_expert, name='ask_the_expert'),
+    path('ask-the-expert/', ask_the_expert, name='ask_the_expert'),
 
     # Role Management
-    path('role-management/', views.role_mgnt, name='role_management'),
+    path('role-management/', role_mgnt, name='role_management'),
 
     # Edit Users
-    path('edit-users/', views.edit_users, name='edit_users'),
+    path('edit-users/', edit_users, name='edit_users'),
 
     # Evidence Tracker
-    path('evidence-tracker/', views.evidence_tracker, name='evidence_tracker'),
+    path('evidence-tracker/', evidence_tracker, name='evidence_tracker'),
 
     # Third Party Users
-    path('third-party-users/', views.third_party_users, name='third_party_users'),
+    path('third-party-users/', third_party_users, name='third_party_users'),
+
+    # Quesstionari
+    path('questionnaire/', manage_questionnaire, name='create_questionnaire'),
+    path('questionnaires/', manage_questionnaire, name='get_questionnaires'),
+    path('questionnaire/<str:pk>/',manage_questionnaire, name='update_questionnaire'),
+    path('questionnaire/delete/<str:pk>/', manage_questionnaire, name='delete_questionnaire'),
 ]
