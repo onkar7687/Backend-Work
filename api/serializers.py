@@ -18,9 +18,9 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import get_db
+# from .models import get_db
 
-db = get_db()
+# db = get_db()
 
 # Serializer for User Registration
 # class UserSerializer(serializers.ModelSerializer):
@@ -184,3 +184,14 @@ class ThirdPartyUsersSerializer(serializers.Serializer):
     third_party_type = serializers.CharField(required=False, max_length=100)
     status = serializers.CharField(required=False, max_length=50)
     note = serializers.CharField(required=False, max_length=1000)
+
+# 4.  Questionnaire Serializer
+class QuestionnaireSerializer(serializers.Serializer):
+    id = serializers.CharField(required=False)  # Optional since MongoDB auto-generates it
+    name = serializers.CharField(max_length=100)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(allow_null=True, required=False)
+    comments = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    status = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    created = serializers.DateTimeField(required=False)
+    modified = serializers.DateTimeField(required=False)
