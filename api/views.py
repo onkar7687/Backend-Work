@@ -5,8 +5,8 @@ from django.http import Http404, JsonResponse
 from .models import get_db
 # from bson import ObjectId  # For handling MongoDB ObjectIds
 # from rest_framework import status
-# from .serializers import QuestionnaireSerializer
-# from datetime import datetime
+from .serializers import QuestionnaireSerializer
+from datetime import datetime
 
 # from django.contrib.auth import authenticate
 # from rest_framework_simplejwt.tokens import RefreshToken
@@ -392,3 +392,158 @@ def third_party_users(request):
             print("Failed to fetch third-party users, Error Code: TPUSK000o02", e)
             return Response({"message": "Something went wrong, Error Code: TPUSK000o02", "status": "FAILED"}, status=500)
 
+
+
+# ================= Start Questionnaire API's ==============================
+
+# POST API: Create a Questionnaire
+import datetime
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
+def manage_questionnaire(request, pk=None):
+    
+    collection = db["questionnaires"]
+
+    # POST: Create a new questionnaire
+    if request.method == "POST":
+        serializer = QuestionnaireSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                # Prepare and save data
+                data = serializer.validated_data
+                data["start_date"] = data["start_date"].isoformat()
+                if "end_date" in data and data["end_date"]:
+                    data["end_date"] = data["end_date"].isoformat()
+                data["created"] = datetime.datetime.now()
+                data["modified"] = datetime.datetime.now()
+
+                result = collection.insert_one(data)
+                return Response(
+                    {
+                        "message": "Questionnaire created successfully",
+                        "id": str(result.inserted_id),
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Failed to save questionnaire.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # GET: Retrieve all questionnaires or a specific one by ID
+    elif request.method == "GET":
+        if pk:
+            # Retrieve a specific questionnaire
+            try:
+                questionnaire = collection.find_one({"_id": ObjectId(pk)})
+                if questionnaire:
+                    questionnaire["_id"] = str(questionnaire["_id"])
+                    return Response(questionnaire, status=status.HTTP_200_OK)
+                else:
+                    return Response(
+                        {"error": "Questionnaire not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            except Exception as e:
+                return Response(
+                    {"error": "Failed to retrieve questionnaire.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        else:
+            # Retrieve all questionnaires
+            try:
+                questionnaires = list(
+                    collection.find(
+                        {},
+                        {
+                            "_id": 1,
+                            "name": 1,
+                            "start_date": 1,
+                            "end_date": 1,
+                            "comments": 1,
+                            "status": 1,
+                            "created": 1,
+                        },
+                    )
+                )
+                for q in questionnaires:
+                    q["_id"] = str(q["_id"])
+                return Response(questionnaires, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"error": "Failed to retrieve questionnaires.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+    # PUT: Update a questionnaire by ID
+    elif request.method == "PUT":
+        if not pk:
+            return Response(
+                {"error": "ID is required for update"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = QuestionnaireSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                object_id = ObjectId(pk)
+                updated_data = serializer.validated_data
+                for key, value in updated_data.items():
+                    if isinstance(value, datetime.date):
+                        updated_data[key] = datetime.datetime.combine(
+                            value, datetime.datetime.min.time()
+                        )
+                updated_data["modified"] = datetime.datetime.now()
+                result = collection.update_one({"_id": object_id}, {"$set": updated_data})
+                if result.matched_count:
+                    return Response(
+                        {"message": "Questionnaire updated successfully"},
+                        status=status.HTTP_200_OK,
+                    )
+                else:
+                    return Response(
+                        {"error": "Questionnaire not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            except Exception as e:
+                return Response(
+                    {"error": "Failed to update questionnaire.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # DELETE: Delete a questionnaire by ID
+    elif request.method == "DELETE":
+        if not pk:
+            return Response(
+                {"error": "ID is required for deletion"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            result = collection.delete_one({"_id": ObjectId(pk)})
+            if result.deleted_count:
+                return Response(
+                    {"message": "Questionnaire deleted successfully"},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
+            else:
+                return Response(
+                    {"error": "Questionnaire not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        except Exception as e:
+            return Response(
+                {"error": "Failed to delete questionnaire.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    # Handle unsupported methods
+    else:
+        return Response(
+            {"error": "Method not allowed"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
+
+
+
+# ================= End Questionnaire API's ==============================
